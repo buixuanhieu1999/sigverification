@@ -1,0 +1,15 @@
+services:
+  signature-verifier:
+    build:
+      args:
+        ORT_BACKEND: gpu
+    image: signature-verifier:gpu
+    environment:
+      SIGNATURE_ORT_PROVIDER: auto
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

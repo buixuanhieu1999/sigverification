@@ -1,0 +1,15 @@
+.venv
+.git
+.gitignore
+.pytest_cache
+.ruff_cache
+__pycache__
+*.py[cod]
+logs
+tmp
+tests
+work
+outputs
+*.pt
+*.zip
+*.ipynb

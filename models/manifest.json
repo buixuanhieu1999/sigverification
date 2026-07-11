@@ -1,0 +1,30 @@
+{
+  "format_version": 2,
+  "pipeline": "gpds-onnx-only",
+  "artifacts": [
+    {
+      "role": "signature_encoder",
+      "path": "models/gpds_signature_encoder.onnx",
+      "bytes": 388350821,
+      "sha256": "a5163a095783e63c0df278aa350b48679f5c34dd8806c8e5502da71f6cfe1a21",
+      "input": "float32[batch,3,224,224]",
+      "output": "float32[batch,1280]",
+      "threshold": 0.3709427153002471,
+      "checkpoint_epoch": 10
+    },
+    {
+      "role": "document_detector",
+      "path": "models/document_detector.onnx",
+      "bytes": 12677018,
+      "sha256": "eb3eac108a82abccd281521cd06cc2fad68f1d6f43df373e2f889b19d7a78d62",
+      "upstream_license_metadata": "AGPL-3.0"
+    },
+    {
+      "role": "signature_detector",
+      "path": "models/signature_detector.onnx",
+      "bytes": 44572244,
+      "sha256": "2d3b1903449890a3e321bde5d60f39f0988f529c706f109e97fa50ab852a9874",
+      "upstream_license_metadata": "AGPL-3.0"
+    }
+  ]
+}

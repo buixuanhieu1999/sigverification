@@ -1,0 +1,17 @@
+services:
+  signature-verifier:
+    build:
+      context: .
+      args:
+        ORT_BACKEND: cpu
+    image: signature-verifier:cpu
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "8000:8000"
+    environment:
+      SIGNATURE_ORT_PROVIDER: cpu
+    volumes:
+      - ./models:/app/models:ro
+    restart: unless-stopped
