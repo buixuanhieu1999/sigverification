@@ -129,6 +129,9 @@ uv run --no-sync pytest
 uv run --no-sync ruff check src tests
 ```
 
+The GPDS encoder is stored with Git LFS. Install Git LFS before cloning this repository
+so the model is downloaded instead of its lightweight pointer file.
+
 ## Deployment notes
 
 The service does not provide authentication or TLS. Place it behind a gateway or
