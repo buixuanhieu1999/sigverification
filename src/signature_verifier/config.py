@@ -9,7 +9,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SIGNATURE_CONFIDENCE = 0.50
-DEFAULT_QUERY_TOP_CUT = 0.35
+DEFAULT_QUERY_TOP_CUT = 0.19
 DEFAULT_SIGNATURE_RATE = 80.0
 
 
