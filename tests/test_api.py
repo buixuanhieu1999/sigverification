@@ -166,7 +166,7 @@ def test_verify_openapi_schema_renders_swagger_file_uploads() -> None:
     assert properties["signature_confidence"]["default"] == 0.5
     assert properties["signature_padding"]["default"] == 0.0
     assert properties["signature_shrink"]["default"] == 0.0
-    assert properties["query_top_cut"]["default"] == 0.35
+    assert properties["query_top_cut"]["default"] == 0.19
 
 
 def test_signature_rate_is_passed_to_service() -> None:
