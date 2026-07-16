@@ -9,7 +9,7 @@ services:
       - path: .env
         required: false
     ports:
-      - "8000:8000"
+      - "${SIGNATURE_API_PORT:-8000}:${SIGNATURE_API_PORT:-8000}"
     environment:
       SIGNATURE_ORT_PROVIDER: cpu
     volumes:

@@ -34,6 +34,7 @@ dev = [
 signature-verifier-check = "signature_verifier.cli:main"
 signature-verifier-api = "signature_verifier.api.app:main"
 signature-verifier-demo = "signature_verifier.gradio_app:main"
+gradio_app = "signature_verifier.gradio_app:main"
 
 [build-system]
 requires = ["hatchling"]

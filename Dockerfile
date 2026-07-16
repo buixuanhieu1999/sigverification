@@ -41,6 +41,6 @@ ENV SIGNATURE_API_HOST=0.0.0.0 \
     SIGNATURE_ORT_PROVIDER=auto
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=4)"
+    CMD python -c "import os, urllib.request; port=os.environ.get('SIGNATURE_API_PORT', '8000'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health/ready', timeout=4)"
 
-CMD ["uvicorn", "signature_verifier.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["signature-verifier-api"]

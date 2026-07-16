@@ -14,6 +14,8 @@ from .scanner.onnx_yolo import get_yolo_detector
 
 
 IMAGE_SUFFIXES = {".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"}
+MIN_USABLE_WARP_AREA_RATIO = 0.25
+MIN_USABLE_WARP_EDGE = 160
 
 
 def normalize_paths(files: Sequence[str | Path] | str | Path | None) -> list[Path]:
@@ -29,6 +31,16 @@ def normalize_paths(files: Sequence[str | Path] | str | Path | None) -> list[Pat
         if path.is_file() and path.suffix.lower() in IMAGE_SUFFIXES:
             paths.append(path)
     return paths
+
+
+def _warp_is_usable(source_shape: tuple[int, ...], warped_shape: tuple[int, ...]) -> bool:
+    source_height, source_width = source_shape[:2]
+    warped_height, warped_width = warped_shape[:2]
+    if min(warped_height, warped_width) < MIN_USABLE_WARP_EDGE:
+        return False
+    source_area = max(1, source_height * source_width)
+    warped_area = max(0, warped_height * warped_width)
+    return (warped_area / float(source_area)) >= MIN_USABLE_WARP_AREA_RATIO
 
 
 class SignatureExtractor:
@@ -51,13 +63,14 @@ class SignatureExtractor:
         query_top_cut: float,
     ) -> SourceBundle:
         source = load_image(path, self.settings.max_input_edge)
+        source_cv = pil_to_cv(source)
         bundle = SourceBundle(role=role, source_name=path.name, source_number=source_number)
 
         if mode is InputMode.CROPPED_SIGNATURE:
             # A cropped signature has no printed document heading to remove. Apply
             # the same zero top-cut on both sides so verification stays symmetric.
             top_cut = 0.0
-            scanned_crop = apply_effect(pil_to_cv(source), "magic")
+            scanned_crop = apply_effect(source_cv, "magic")
             cleaned_crop, _, _ = isolate_signature_ink(
                 scanned_crop,
                 top_cut_ratio=top_cut,
@@ -88,7 +101,7 @@ class SignatureExtractor:
 
         self.settings.validate(require_detectors=True)
         scan_result = scan_document(
-            pil_to_cv(source),
+            source_cv,
             effect="simple",
             detector="yolo",
             yolo_model=self.settings.document_model_path,
@@ -98,8 +111,17 @@ class SignatureExtractor:
             yolo_expand=0.08,
             yolo_refine=True,
         )
+        signature_source = scan_result.warped_image
+        used_scan_fallback = False
+        warnings = []
+        if not _warp_is_usable(source_cv.shape, scan_result.warped_image.shape):
+            signature_source = source_cv
+            used_scan_fallback = True
+            warnings.append(
+                "Document scan output was implausibly small; original image used for signature detection."
+            )
         signature_result = detect_and_crop_signatures(
-            scan_result.warped_image,
+            signature_source,
             model_path=self.settings.signature_model_path,
             conf=float(signature_confidence),
             imgsz=960,
@@ -112,19 +134,23 @@ class SignatureExtractor:
             postprocess_min_component_area=15,
             postprocess_keep_largest_groups=self.settings.keep_largest_ink_groups,
         )
-        bundle.warped_document = cv_to_pil(scan_result.warped_image)
+        bundle.warped_document = cv_to_pil(signature_source)
         bundle.detection_overlay = cv_to_pil(signature_result.annotated_image)
-        warnings = []
         if not scan_result.document_found:
             warnings.append("Document border not confidently found; scanner fallback warp used.")
         bundle.metadata = {
             "input_mode": mode.value,
             "document_found": bool(scan_result.document_found),
             "document_detection": scan_result.detection,
+            "document_scan_fallback_to_original": used_scan_fallback,
+            "document_scan_shape": list(scan_result.warped_image.shape[:2]),
+            "signature_detection_shape": list(signature_source.shape[:2]),
             "signature_count": len(signature_result.crops),
             "signature_detections": signature_result.detections,
             "signature_detector_runtime": signature_result.runtime,
-            "signature_source": "original warped document",
+            "signature_source": (
+                "original input image" if used_scan_fallback else "original warped document"
+            ),
             "crop_effect": "magic",
             "postprocess": "isolate_signature_ink",
             "signature_confidence": float(signature_confidence),
